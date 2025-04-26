@@ -35,7 +35,7 @@ export default function RootLayout({
         {children}
         <Footer/>
         </WatchlistProvider>
-            </suspense>
+            </Suspense>
         </body>
     </html>
   );
