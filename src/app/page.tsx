@@ -1,37 +1,83 @@
-import Link from "next/link";
+"use client";
 
-export default function HomePage() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-        <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-          Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-        </h1>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-          <Link
-            className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-            href="https://create.t3.gg/en/usage/first-steps"
-            target="_blank"
-          >
-            <h3 className="text-2xl font-bold">First Steps →</h3>
-            <div className="text-lg">
-              Just the basics - Everything you need to know to set up your
-              database and authentication.
-            </div>
-          </Link>
-          <Link
-            className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-            href="https://create.t3.gg/en/introduction"
-            target="_blank"
-          >
-            <h3 className="text-2xl font-bold">Documentation →</h3>
-            <div className="text-lg">
-              Learn more about Create T3 App, the libraries it uses, and how to
-              deploy it.
-            </div>
-          </Link>
-        </div>
+import { useEffect, useState } from "react";
+import { tmdbAPI, type Movie,  type TVShow } from "@/lib/tsmd";
+import HeroSection from "@/components/media/HeroSection";
+import MediaSlider from "@/components/media/MediaSlider";
+import { toast } from "sonner";
+
+const Page = () => {
+  const [trendingMovies, setTrendingMovies] = useState<Movie[]>([]);
+  const [trendingTVShows, setTrendingTVShows] = useState<TVShow[]>([]);
+  const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
+  const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([]);
+  const [topRatedMovies, setTopRatedMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [heroMedia, setHeroMedia] = useState<Movie | null>(null);
+  
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch trending movies
+        const trendingMoviesData = await tmdbAPI.getTrending("movie");
+        setTrendingMovies(trendingMoviesData.results);
+        
+        // Randomly select a hero movie from trending
+        if (trendingMoviesData.results.length > 0) {
+          const randomIndex = Math.floor(Math.random() * Math.min(5, trendingMoviesData.results.length));
+          setHeroMedia(trendingMoviesData.results[randomIndex]);
+        }
+        
+        // Fetch trending TV shows
+        const trendingTVData = await tmdbAPI.getTrending("tv");
+        setTrendingTVShows(trendingTVData.results);
+        
+        // Fetch popular movies
+        const popularMoviesData = await tmdbAPI.getPopular("movie");
+        setPopularMovies(popularMoviesData.results);
+        
+        // Fetch upcoming movies
+        const upcomingMoviesData = await tmdbAPI.getUpcoming();
+        setUpcomingMovies(upcomingMoviesData.results);
+        
+        // Fetch top rated movies
+        const topRatedMoviesData = await tmdbAPI.getTopRated("movie");
+        setTopRatedMovies(topRatedMoviesData.results);
+        
+      } catch (error) {
+        console.error("Error fetching home data:", error);
+        toast.error("Failed to load data. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchHomeData();
+  }, [toast]);
+  
+  if (loading) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-movie-primary border-t-transparent" />
       </div>
-    </main>
+    );
+  }
+  
+  return (
+    <div>
+      {heroMedia && <HeroSection media={heroMedia} mediaType="movie" />}
+      
+      <div className="pb-8 bg-gray-700">
+        <MediaSlider title="Trending Movies" items={trendingMovies} mediaType="movie" />
+        <MediaSlider title="Trending TV Shows" items={trendingTVShows} mediaType="tv" />
+        <MediaSlider title="Popular Movies" items={popularMovies} mediaType="movie" />
+        <MediaSlider title="Upcoming Movies" items={upcomingMovies} mediaType="movie" />
+        <MediaSlider title="Top Rated Movies" items={topRatedMovies} mediaType="movie" />
+      </div>
+    </div>
   );
-}
+};
+
+export default Page;
