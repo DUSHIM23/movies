@@ -6,6 +6,7 @@ import "@/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
+import { Suspense } from "react";
 
 
 export const metadata: Metadata = {
@@ -25,6 +26,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable} bg-gray-700`}>
       <body>
+        <Suspense>
+
         <WatchlistProvider>
           <Toaster
             position="top-center"/>
@@ -32,6 +35,7 @@ export default function RootLayout({
         {children}
         <Footer/>
         </WatchlistProvider>
+            </suspense>
         </body>
     </html>
   );
